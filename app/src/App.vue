@@ -50,11 +50,13 @@ export default {
     },
 
     getPredictions() {
-          axios.get(`http://localhost:9000/${this.route}/${this.stop_id}`)
+          axios.get(`http://localhost:9000/search?r=${this.route}&s=${this.stop_id}`)
     .then((response) => {
       this.predictions = response.data.Directions[0].Predictions;
 
-    }).catch((exception) => console.log(exception));
+    }).catch((exception) => {
+      this.predictions = [];
+    });
     }
   },
 }
