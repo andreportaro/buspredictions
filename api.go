@@ -24,7 +24,10 @@ type direction struct {
 }
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir("app/dist"))
+	http.Handle("/", fs)
+
+	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
 
 		if r.Method == "OPTIONS" {
 			w.WriteHeader(http.StatusOK)
@@ -36,7 +39,10 @@ func main() {
 
 		w.WriteHeader(http.StatusOK)
 
-		predictions, _ := getPredictions("80", "11777")
+		route := r.URL.Query().Get("r")
+		stop := r.URL.Query().Get("s")
+
+		predictions, _ := getPredictions(route, stop)
 
 		fmt.Fprintln(w, predictions)
 	})
