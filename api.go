@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 )
 
 type body struct {
@@ -47,9 +48,20 @@ func main() {
 		fmt.Fprintln(w, predictions)
 	})
 
-	fmt.Println("Now listening on port :9000")
-	log.Fatal(http.ListenAndServe(":9000", nil))
+	fmt.Println("Listening on port" + GetPort())
 
+	log.Fatal(http.ListenAndServe(GetPort(), nil))
+}
+
+// Get the Port from the environment so we can run on Heroku
+func GetPort() string {
+	var port = os.Getenv("PORT")
+	// Set a default port if there is nothing in the environment
+	if port == "" {
+		port = "9000"
+		fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
+	}
+	return ":" + port
 }
 
 func getPredictions(route string, stopID string) (string, error) {
