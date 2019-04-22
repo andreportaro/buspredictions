@@ -15,7 +15,9 @@
     >
 </label>
 
-    <button @click.prevent="search" class="fr mt2 b--transparent h2 bg-blue white ph3 copy">Search</button>
+    <button @click.prevent="search" 
+    :disabled="busy"
+    class="fr mt2 b--transparent h2 bg-blue white ph3 copy pointer">Search</button>
 
     </form>
     <div class="w-100 dib">
@@ -36,12 +38,18 @@ import axios from "axios";
 
 export default {
   name: 'app',
+
   data() {
     return {
       route: 80,
       stop_id: 11777,
       predictions: [],
+      busy: false,
     }
+  },
+
+  mounted() {
+    this.fetchSearches();
   },
 
   methods: {
@@ -49,14 +57,20 @@ export default {
       this.getPredictions();
     },
 
+    fetchSearches() {
+      axios.get(`/history`).then((response) => this.history = response.data.History)
+    },
+
     getPredictions() {
+      this.busy = true;
+      
           axios.get(`/search?r=${this.route}&s=${this.stop_id}`)
     .then((response) => {
       this.predictions = response.data.Directions[0].Predictions;
 
     }).catch(() => 
       this.predictions = []
-    );
+    ).finally(this.busy = false);
     }
   },
 }
