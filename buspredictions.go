@@ -5,31 +5,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/google/uuid"
 )
 
 func main() {
-	fs := http.FileServer(http.Dir("app/dist"))
-	http.Handle("/", fs)
+	InitConfig()
 
-	http.HandleFunc("/search", func(w http.ResponseWriter, r *http.Request) {
+	http.Handle("/search", session(http.HandlerFunc(Search)))
 
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
+	http.Handle("/", session(http.HandlerFunc(Index)))
 
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
-		w.WriteHeader(http.StatusOK)
-
-		route := r.URL.Query().Get("r")
-		stop := r.URL.Query().Get("s")
-
-		predictions, _ := GetPredictions(route, stop)
-
-		fmt.Fprintln(w, predictions)
-	})
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("app/dist"))))
 
 	fmt.Println("Listening on port" + GetPort())
 
@@ -45,4 +32,53 @@ func GetPort() string {
 		fmt.Println("INFO: No PORT environment variable detected, defaulting to " + port)
 	}
 	return ":" + port
+}
+
+func session(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		session, err := SessionsStore.Get(r, "uuid")
+		if err != nil {
+			fmt.Println(err)
+			// Handle the error
+		}
+
+		if val, ok := session.Values["uuid"].(string); ok {
+			fmt.Println("Session exists")
+			fmt.Println(val)
+		} else {
+			fmt.Println("uuid does not exist")
+			id, _ := uuid.NewUUID()
+
+			session.Values["uuid"] = id.String()
+
+			fmt.Println(session.Values)
+		}
+
+		if val, ok := session.Values["uuid"].(string); ok {
+			w.Header().Set("tests", val)
+		}
+
+		// Pre-flight
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		// w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		fmt.Println(session.Values)
+
+		// Save it before we write to the response/return from the handler.
+		sessionError := session.Save(r, w)
+		if sessionError != nil {
+			fmt.Println("error saving session")
+			fmt.Println(sessionError)
+			// handle the error case
+		}
+
+		w.WriteHeader(http.StatusOK)
+		next.ServeHTTP(w, r)
+	})
 }
