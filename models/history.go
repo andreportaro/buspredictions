@@ -2,6 +2,7 @@ package models
 
 import (
 	"log"
+	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"gopkg.in/mgo.v2"
@@ -19,11 +20,12 @@ type SearchHistory struct {
 }
 
 func (d *DB) Connect() {
-	session, err := mgo.Dial("mongodb://localhost:27017")
+	session, err := mgo.Dial(getHost())
 	if err != nil {
 		log.Fatal(err)
 	}
-	db = session.DB("test")
+
+	db = session.DB("buspredictions")
 }
 
 func (d *DB) Create(uuid, route, stop string) {
@@ -41,4 +43,14 @@ func (d *DB) GetAll(uuid string) ([]SearchHistory, error) {
 	var s []SearchHistory
 	err := db.C("search_history").Find(bson.M{"uuid": uuid}).All(&s)
 	return s, err
+}
+
+func getHost() string {
+	var host = os.Getenv("MONGODB_URI")
+
+	if host == "" {
+		return "mongodb://localhost:27017"
+	}
+
+	return host
 }
