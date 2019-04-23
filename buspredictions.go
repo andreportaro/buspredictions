@@ -1,26 +1,40 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 
+	. "github.com/andreportaro/buspredictions/models"
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 )
 
-func main() {
+var db = DB{}
+
+type Session struct {
+	Uuid string
+}
+
+func init() {
 	InitConfig()
 
-	http.Handle("/search", session(http.HandlerFunc(Search)))
+	gob.Register(Session{})
 
-	http.Handle("/", session(http.HandlerFunc(Index)))
+	db.Connect()
+}
 
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("app/dist"))))
+func main() {
+	router := NewRouter()
+
+	router.HandleFunc("/", Index)
+	router.HandleFunc("/search", Search)
+	router.HandleFunc("/history", History)
 
 	fmt.Println("Listening on port" + GetPort())
-
-	log.Fatal(http.ListenAndServe(GetPort(), nil))
+	log.Fatal(http.ListenAndServe(GetPort(), router))
 }
 
 // Get the Port from the environment so we can run on Heroku
@@ -34,13 +48,22 @@ func GetPort() string {
 	return ":" + port
 }
 
+func NewRouter() *mux.Router {
+	router := mux.NewRouter().StrictSlash(true)
+
+	// Server CSS, JS & Images Statically.
+	router.
+		PathPrefix("/static/").
+		Handler(http.StripPrefix("/static", http.FileServer(http.Dir("."+"/app/dist/"))))
+
+	return router
+}
+
 func session(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
 		session, err := SessionsStore.Get(r, "uuid")
 		if err != nil {
 			fmt.Println(err)
-			// Handle the error
 		}
 
 		if val, ok := session.Values["uuid"].(string); ok {
@@ -59,22 +82,13 @@ func session(next http.Handler) http.Handler {
 			w.Header().Set("tests", val)
 		}
 
-		// Pre-flight
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		// w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-
 		fmt.Println(session.Values)
 
 		// Save it before we write to the response/return from the handler.
 		sessionError := session.Save(r, w)
+
 		if sessionError != nil {
-			fmt.Println("error saving session")
-			fmt.Println(sessionError)
+			log.Fatal(sessionError)
 			// handle the error case
 		}
 
