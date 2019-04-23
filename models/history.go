@@ -25,7 +25,7 @@ func (d *DB) Connect() {
 		log.Fatal(err)
 	}
 
-	db = session.DB("buspredictions")
+	db = session.DB(getDatabase())
 }
 
 func (d *DB) Create(uuid, route, stop string) {
@@ -53,4 +53,14 @@ func getHost() string {
 	}
 
 	return host
+}
+
+func getDatabase() string {
+	var database = os.Getenv("MONGODB_DB")
+
+	if database == "" {
+		return "buspredictions"
+	}
+
+	return database
 }
