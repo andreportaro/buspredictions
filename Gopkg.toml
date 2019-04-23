@@ -40,3 +40,6 @@
 [metadata.heroku]
   root-package = "github.com/andreportaro/buspredictions"
  
+[[constraint]]
+  name = "go.mongodb.org/mongo-driver"
+  version = "~1.0.0"
