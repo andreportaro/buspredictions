@@ -32,8 +32,16 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	session.Values["uuid"] = sess
 	session.Save(r, w)
 
+	history, _ := db.GetAll(sess.Uuid)
+
+	resultJson, _ := json.Marshal(history)
+
+	varmap := map[string]interface{}{
+		"Searches": string(resultJson),
+	}
+
 	t, _ := template.ParseFiles("app/dist/index.html")
-	t.Execute(w, sess)
+	t.Execute(w, varmap)
 }
 
 func History(w http.ResponseWriter, r *http.Request) {

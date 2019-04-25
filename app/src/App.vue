@@ -64,7 +64,7 @@ export default {
   },
 
   mounted() {
-    let hist = window.searches || [];
+    this.history = window.searches || [];
   },
 
   methods: {
@@ -72,9 +72,9 @@ export default {
       this.getPredictions();
     },
 
-    fetchSearches() {
-      axios.get(`/history`).then(response => {
-        this.history = response.data || [];
+    fetchHistory() {
+      axios.get(`/history`).then((response) => {
+        this.history = response.data || []; 
       });
     },
 
