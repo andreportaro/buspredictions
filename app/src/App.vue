@@ -2,7 +2,6 @@
   <div id="app" class="mw6 mt5 pa4 center bg-near-white bg-white">
     <h2>Predictions</h2>
     <form action="#">
-
 <label class="f3 mb2 dib w-100">Route
     <input type="text" v-model="route"
       class="w-100 mt2 pl2 dib input-reset b--silver ba h2 f4 gray"
@@ -15,13 +14,21 @@
     >
 </label>
 
-    <button @click.prevent="search" 
+    <button @click.prevent="getPredictions" 
     :disabled="busy"
     class="fr mt2 b--transparent h2 bg-blue white ph3 copy pointer">Search</button>
 
     </form>
     <div class="w-100 dib">
 
+<div v-if="history.length > 0">
+      <h3 class="w-100 db">From your history</h3>
+      <div v-for="hist in history" :key="hist.uuid"
+      @click="search(hist)"
+      class="mt4 w-25 ba b--blue pa3 h-input blue pointer" >
+            {{ hist.route_id }} / {{ hist.stop_id }}
+      </div>
+</div>
     <ul class="list pl0">
       <li v-for="prediction in predictions" :key="prediction._id"
           class="f4 gray h3 ba b--silver  pa3"
@@ -45,6 +52,8 @@ export default {
       stop_id: 11777,
       predictions: [],
       busy: false,
+      searching: false,
+      history: [],
     }
   },
 
@@ -58,7 +67,9 @@ export default {
     },
 
     fetchSearches() {
-      axios.get(`/history`).then((response) => this.history = response.data.History)
+      axios.get(`/history`).then((response) => {
+        this.history = response.data || []; 
+      });
     },
 
     getPredictions() {
@@ -67,10 +78,15 @@ export default {
           axios.get(`/search?r=${this.route}&s=${this.stop_id}`)
     .then((response) => {
       this.predictions = response.data.Directions[0].Predictions;
-
     }).catch(() => 
       this.predictions = []
     ).finally(this.busy = false);
+    },
+
+    search(hist) {
+      this.route = hist.route_id;
+      this.stop_id = hist.stop_id;
+      this.getPredictions();
     }
   },
 }

@@ -92,7 +92,7 @@ func Search(w http.ResponseWriter, r *http.Request) {
 
 	db.Create(sess.Uuid, route, stop)
 
-	fmt.Fprintln(w, predictions)
+	w.Write(predictions)
 }
 
 func getSession(s *sessions.Session) Session {

@@ -53,9 +53,12 @@ func NewRouter() *mux.Router {
 
 	// Server CSS, JS & Images Statically.
 	router.
-		PathPrefix("/static/").
-		Handler(http.StripPrefix("/static", http.FileServer(http.Dir("."+"/app/dist/"))))
+		PathPrefix("/css/").
+		Handler(http.StripPrefix("/css", http.FileServer(http.Dir("."+"/app/dist/css"))))
 
+	router.
+		PathPrefix("/js/").
+		Handler(http.StripPrefix("/js", http.FileServer(http.Dir("."+"/app/dist/js"))))
 	return router
 }
 

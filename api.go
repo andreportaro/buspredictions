@@ -5,7 +5,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 )
 
@@ -24,19 +23,15 @@ type direction struct {
 }
 
 // Calls the nextbus publicXMLfeed endpoint with the command=prediction
-func GetPredictions(route string, stopID string) (string, error) {
+func GetPredictions(route string, stopID string) ([]byte, error) {
 	if xmlBytes, err := getXML("http://webservices.nextbus.com/service/publicXMLFeed?command=predictions&a=ttc&r=" + route + "&stopId=" + stopID); err != nil {
-		log.Printf("Failed to get XML: %v", err)
-
-		return "Failed to get XML", err
+		return []byte("Failed to get XML"), err
 	} else {
 		var result body
 		xml.Unmarshal(xmlBytes, &result)
 
 		jsonData, _ := json.Marshal(result)
-		fmt.Println(string(jsonData))
-
-		return string(jsonData), nil
+		return jsonData, nil
 	}
 }
 
