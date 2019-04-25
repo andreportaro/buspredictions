@@ -58,7 +58,7 @@ export default {
   },
 
   mounted() {
-    this.fetchSearches();
+    this.fetchHistory();
   },
 
   methods: {
@@ -66,7 +66,7 @@ export default {
       this.getPredictions();
     },
 
-    fetchSearches() {
+    fetchHistory() {
       axios.get(`/history`).then((response) => {
         this.history = response.data || []; 
       });
