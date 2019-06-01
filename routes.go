@@ -34,10 +34,10 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	history, _ := db.GetAll(sess.Uuid)
 
-	resultJson, _ := json.Marshal(history)
+	resultJSON, _ := json.Marshal(history)
 
 	varmap := map[string]interface{}{
-		"Searches": string(resultJson),
+		"Searches": string(resultJSON),
 	}
 
 	t, _ := template.ParseFiles("app/dist/index.html")
